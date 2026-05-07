@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Azure Blood-Bank Deployment Review</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --ink:#111827;
+      --muted:#64748b;
+      --blue:#2563eb;
+      --blue2:#0f172a;
+      --cyan:#06b6d4;
+      --green:#16a34a;
+      --green-bg:#ecfdf5;
+      --red:#dc2626;
+      --red-bg:#fff1f2;
+      --yellow:#facc15;
+      --yellow-bg:#fff8d7;
+      --border:#e5e7eb;
+      --code:#0b1220;
+      --shadow:0 14px 32px rgba(15,23,42,.08);
+      --radius:20px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background:linear-gradient(180deg,#eef4ff 0%,var(--bg) 340px);
+      color:var(--ink);
+      line-height:1.58;
+    }
+    .wrap{max-width:1220px;margin:auto;padding:28px 20px 70px}
+    .hero{
+      background:
+        radial-gradient(circle at top right,rgba(6,182,212,.28),transparent 36%),
+        linear-gradient(135deg,#0f172a,#1d4ed8);
+      color:#fff;
+      border-radius:30px;
+      padding:36px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .label{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 12px;border-radius:999px;
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.24);
+      font-weight:850;margin-bottom:16px;
+    }
+    h1{
+      margin:0 0 12px;
+      font-size:clamp(32px,4.8vw,60px);
+      line-height:1.04;
+      letter-spacing:-.045em;
+      font-weight:950;
+    }
+    .hero p{font-size:18px;max-width:950px;margin:0;color:#dbeafe}
+    .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:18px 0 28px}
+    .stat{
+      background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+      padding:18px;box-shadow:var(--shadow);
+    }
+    .stat b{display:block;font-size:29px;color:var(--blue);line-height:1.1}
+    .stat span{display:block;color:var(--muted);font-size:13px;font-weight:850;text-transform:uppercase;letter-spacing:.04em;margin-top:5px}
+    section{margin:26px 0}
+    .section-title{
+      display:flex;align-items:center;gap:10px;
+      margin:0 0 14px;
+      font-size:28px;
+      font-weight:950;
+      letter-spacing:-.03em;
+    }
+    .num{
+      width:38px;height:38px;border-radius:13px;
+      background:var(--blue);color:white;
+      display:inline-flex;align-items:center;justify-content:center;
+      font-weight:950;flex:0 0 auto;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:20px;
+      box-shadow:var(--shadow);
+      margin:16px 0;
+    }
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .task-title{font-size:20px;font-weight:950;margin:0 0 8px}
+    .subtle{color:var(--muted)}
+    .note,.success,.warn,.danger{
+      border-radius:15px;
+      padding:14px 16px;
+      margin:12px 0;
+      border:1px solid;
+      border-left-width:7px;
+    }
+    .note{background:#eff6ff;border-color:#bfdbfe;border-left-color:var(--blue)}
+    .success{background:var(--green-bg);border-color:#bbf7d0;border-left-color:var(--green)}
+    .warn{background:var(--yellow-bg);border-color:#fde68a;border-left-color:var(--yellow)}
+    .danger{background:var(--red-bg);border-color:#fecdd3;border-left-color:var(--red)}
+    .checklist{display:grid;gap:10px;margin:10px 0}
+    .check{
+      display:flex;gap:10px;align-items:flex-start;
+      background:#f8fafc;border:1px solid #e2e8f0;
+      border-radius:13px;padding:11px 12px;font-weight:750;
+    }
+    .check:before{
+      content:"✓";
+      width:22px;height:22px;border-radius:7px;
+      background:var(--green);color:#fff;
+      display:inline-flex;align-items:center;justify-content:center;
+      font-weight:950;flex:0 0 auto;margin-top:2px;
+    }
+    .timeline{display:grid;gap:14px;position:relative}
+    .step{
+      display:grid;grid-template-columns:44px 1fr;gap:12px;
+      align-items:flex-start;
+    }
+    .step .dot{
+      width:36px;height:36px;border-radius:12px;
+      background:#dbeafe;color:#1e40af;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:950;
+      border:1px solid #bfdbfe;
+    }
+    .step .body{
+      background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px 16px;
+    }
+    .step h3{margin:0 0 5px;font-size:18px}
+    pre{
+      background:var(--code);color:#dbeafe;
+      border:1px solid #24324b;border-radius:16px;
+      padding:16px;overflow:auto;
+      font-size:14px;line-height:1.48;
+      margin:12px 0;
+    }
+    code{font-family:"Cascadia Code","JetBrains Mono",Consolas,Monaco,monospace}
+    .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .badge{
+      border-radius:999px;padding:6px 9px;font-size:12px;font-weight:900;
+      background:#e0f2fe;color:#075985;border:1px solid #bae6fd;
+    }
+    .badge.green{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+    .badge.yellow{background:#fef3c7;color:#92400e;border-color:#fde68a}
+    .badge.red{background:#fee2e2;color:#991b1b;border-color:#fecdd3}
+    .architecture{
+      background:#0b1220;color:#dbeafe;border-radius:18px;padding:20px;
+      border:1px solid #24324b;
+      font-family:"Cascadia Code","JetBrains Mono",Consolas,monospace;
+      white-space:pre;
+      overflow:auto;
+    }
+    .progress-card{
+      display:flex;align-items:center;gap:16px;
+      background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:14px;
+    }
+    .icon{
+      width:44px;height:44px;border-radius:14px;background:#dbeafe;color:#1e40af;
+      display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:950;flex:0 0 auto;
+    }
+    .mini-title{font-weight:950;margin-bottom:2px}
+    table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:16px;border:1px solid #e5e7eb}
+    th,td{padding:12px 14px;text-align:left;border-bottom:1px solid #e5e7eb;vertical-align:top}
+    th{background:#f8fafc;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:#475569}
+    tr:last-child td{border-bottom:0}
+    .footer{text-align:center;color:var(--muted);font-weight:850;margin-top:34px}
+    @media(max-width:940px){
+      .stats,.grid2,.grid3,.grid4{grid-template-columns:1fr}
+      .hero{padding:25px}
+      .architecture{font-size:13px}
+    }
+    @media print{
+      body{background:white}
+      .hero,.stat,.card{box-shadow:none}
+      pre{white-space:pre-wrap}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="label">☁️ Practical DevOps Task · Azure IaaS / Cloud Providers</div>
+    <h1>Azure Blood-Bank Deployment Review</h1>
+    <p>Портфоліо-сторінка практичного завдання: Azure Linux VM, Apache/PHP, Azure Database for MySQL Flexible Server, Blood-Bank-Management-System, troubleshooting, GitHub branch та фінальна перевірка в браузері.</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><b>6</b><span>ключових вимог</span></div>
+    <div class="stat"><b>2</b><span>Azure resources</span></div>
+    <div class="stat"><b>3</b><span>основні проблеми</span></div>
+    <div class="stat"><b>3</b><span>GitHub файли</span></div>
+    <div class="stat"><b>✅ Done</b><span>фінальний стан</span></div>
+  </div>
+
+  <section>
+    <h2 class="section-title"><span class="num">1</span> Моє завдання</h2>
+    <div class="card">
+      <div class="task-title">Cloud Computing Assignment</div>
+      <p>Завдання вимагало створити інфраструктуру в Microsoft Azure, розгорнути Linux VM, налаштувати SQL database в Azure, встановити та запустити Blood-Bank-Management-System, перевірити роботу застосунку з браузера і записати відео на 2–5 хвилин.</p>
+      <div class="checklist">
+        <div class="check">Register on the Azure Portal.</div>
+        <div class="check">Set up an SQL database in Azure.</div>
+        <div class="check">Create a Virtual Machine in Azure and install Linux.</div>
+        <div class="check">Install and deploy Blood-Bank-Management-System on Azure Linux VM.</div>
+        <div class="check">Для повного варіанту: database має бути another VM або dedicated Azure resource.</div>
+        <div class="check">Check the operation of the application from the browser and record a short video.</div>
+      </div>
+      <div class="success"><b>Фінальний результат:</b> повний варіант виконано. База даних винесена в окремий dedicated Azure resource — Azure Database for MySQL Flexible Server.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title"><span class="num">2</span> Реалізована архітектура</h2>
+    <div class="grid2">
+      <div class="card">
+        <div class="task-title">Architecture</div>
+        <div class="architecture">Browser
+  ↓ HTTP :80
+Azure VM: nik-vm-01
+Ubuntu 24.04
+Apache2 + PHP + Blood-Bank app
+  ↓ MySQL :3306 / SSL
+Azure Database for MySQL Flexible Server
+nik-bloodbank-mysql
+Database: bloodbank</div>
+        <div class="badge-row">
+          <span class="badge">Azure VM</span>
+          <span class="badge">Ubuntu 24.04</span>
+          <span class="badge">Apache2</span>
+          <span class="badge">PHP</span>
+          <span class="badge">Azure MySQL</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="task-title">Ключові ресурси</div>
+        <table>
+          <tr><th>Resource</th><th>Value</th></tr>
+          <tr><td>Resource Group</td><td><b>nik</b></td></tr>
+          <tr><td>Virtual Machine</td><td><b>nik-vm-01</b></td></tr>
+          <tr><td>OS</td><td><b>Ubuntu 24.04</b></td></tr>
+          <tr><td>Public IP</td><td><b>20.126.6.252</b></td></tr>
+          <tr><td>Database server</td><td><b>nik-bloodbank-mysql</b></td></tr>
+          <tr><td>MySQL endpoint</td><td><b>nik-bloodbank-mysql.mysql.database.azure.com</b></td></tr>
+          <tr><td>Application DB</td><td><b>bloodbank</b></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title"><span class="num">3</span> Реалізація по етапах</h2>
+    <div class="timeline">
+      <div class="step">
+        <div class="dot">1</div>
+        <div class="body">
+          <h3>Створення Azure VM</h3>
+          <p>Було створено VM <b>nik-vm-01</b> на Ubuntu 24.04. Під час створення стандартний size <b>B1s</b> був недоступний, тому було вибрано інший доступний size, зокрема B2ts/B2s.</p>
+          <div class="warn"><b>Важлива примітка для відео:</b> відхилення від туторіалу було через недоступність B1s у вибраному регіоні/підписці.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="dot">2</div>
+        <div class="body">
+          <h3>SSH і доступ до VM</h3>
+          <p>Підключення до VM виконувалося через SSH / MobaXterm. Для зручної роботи також використовувався tmux.</p>
+          <pre><code>ssh azureuser@20.126.6.252
+tmux new -s azure</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="dot">3</div>
+        <div class="body">
+          <h3>Apache/PHP/MySQL client</h3>
+          <p>На VM встановлено web stack для PHP-застосунку.</p>
+          <pre><code>sudo apt update
+sudo apt install -y apache2 php libapache2-mod-php php-mysql git unzip mysql-client
+sudo systemctl enable apache2
+sudo systemctl restart apache2</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="dot">4</div>
+        <div class="body">
+          <h3>Azure NSG і порт 80</h3>
+          <p>Apache локально працював, але сайт спочатку не відкривався з браузера. Було налаштовано inbound rule для HTTP port 80 у Network Security Group.</p>
+          <div class="success"><b>Результат:</b> сторінка Apache та Blood-Bank app відкривалися за public IP.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="dot">5</div>
+        <div class="body">
+          <h3>Azure Database for MySQL Flexible Server</h3>
+          <p>Було створено окремий dedicated Azure database resource. Firewall rule дозволив доступ до MySQL тільки з IP Azure VM.</p>
+          <div class="checklist">
+            <div class="check">Public access enabled.</div>
+            <div class="check">Firewall rule: allow-nik-vm-01.</div>
+            <div class="check">VM public IP: 20.126.6.252 → 20.126.6.252.</div>
+            <div class="check">SSL mode used for MySQL connection.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="dot">6</div>
+        <div class="body">
+          <h3>Деплой Blood-Bank-Management-System</h3>
+          <p>Репозиторій було склониновано, SQL dump знайдено, застосунок скопійовано в Apache web root.</p>
+          <pre><code>cd /tmp
+git clone https://github.com/DevOps2-Fundamentals/Blood-Bank-Management-System.git
+find /tmp/Blood-Bank-Management-System -name "*.sql" -type f
+
+sudo rm -rf /var/www/html/*
+sudo cp -a /tmp/Blood-Bank-Management-System/. /var/www/html/
+sudo chown -R www-data:www-data /var/www/html
+sudo chmod -R 755 /var/www/html
+sudo systemctl restart apache2</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title"><span class="num">4</span> Команди перевірки</h2>
+    <div class="grid2">
+      <div class="card">
+        <div class="task-title">Перевірка VM і web server</div>
+        <pre><code>cd /var/www/html
+pwd
+ls -la
+
+apache2 -v
+php -v
+mysql --version
+
+sudo systemctl status apache2 --no-pager
+curl -I http://localhost/main.php</code></pre>
+        <div class="success"><b>Очікувано:</b> Apache active (running), curl повертає HTTP/1.1 200 OK.</div>
+      </div>
+      <div class="card">
+        <div class="task-title">Перевірка connection.php без пароля</div>
+        <div class="warn">Повний файл connection.php не можна показувати у відео, бо там є credentials.</div>
+        <pre><code>grep -E 'servername|username|dbname' /var/www/html/file/connection.php</code></pre>
+        <div class="success">Так можна безпечно показати endpoint, username і database name без пароля.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="task-title">Перевірка Azure MySQL</div>
+      <pre><code>mysql -h nik-bloodbank-mysql.mysql.database.azure.com -u bloodadmin -p --ssl-mode=REQUIRED -e "SHOW DATABASES; SHOW TABLES FROM bloodbank;"
+
+mysql -h nik-bloodbank-mysql.mysql.database.azure.com -u bloodadmin -p --ssl-mode=REQUIRED -e "SELECT COUNT(*) AS hospitals_count FROM bloodbank.hospitals; SELECT COUNT(*) AS receivers_count FROM bloodbank.receivers; SELECT COUNT(*) AS bloodinfo_count FROM bloodbank.bloodinfo; SELECT COUNT(*) AS blooddinfo_count FROM bloodbank.blooddinfo;"</code></pre>
+      <div class="success"><b>Підтверджено:</b> база bloodbank існує, таблиці імпортовані, записи є, застосунок працює з Azure MySQL.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title"><span class="num">5</span> Труднощі та виправлення</h2>
+    <div class="grid3">
+      <div class="card">
+        <div class="task-title">Проблема 1: сайт не відкривався з браузера</div>
+        <div class="danger"><b>Було:</b> Apache локально відповідав, але браузер показував timeout.</div>
+        <div class="note"><b>Причина:</b> у Azure NSG не був коректно відкритий HTTP port 80.</div>
+        <div class="success"><b>Рішення:</b> додати inbound rule для port 80 HTTP. Після цього сайт почав відкриватися за public IP.</div>
+      </div>
+
+      <div class="card">
+        <div class="task-title">Проблема 2: MySQL timeout / ERROR 2003</div>
+        <div class="danger"><b>Було:</b> MySQL client зависав або повертав Can't connect to MySQL server.</div>
+        <div class="note"><b>Причина:</b> правило Azure MySQL firewall не було застосоване/збережене або доступ з VM IP не був дозволений.</div>
+        <div class="success"><b>Рішення:</b> додано firewall rule для VM public IP і перевірено порт 3306.</div>
+        <pre><code>timeout 10 bash -c 'cat < /dev/null > /dev/tcp/nik-bloodbank-mysql.mysql.database.azure.com/3306' && echo "3306 OPEN" || echo "3306 CLOSED"</code></pre>
+      </div>
+
+      <div class="card">
+        <div class="task-title">Проблема 3: HTTP 500 при реєстрації</div>
+        <div class="danger"><b>Було:</b> PHP Fatal error: Field 'id' doesn't have a default value.</div>
+        <div class="note"><b>Причина:</b> після імпорту в Azure MySQL з’явилися invisible my_row_id primary keys, а очікувані поля id/bid/reqid/donoid/bdid не мали AUTO_INCREMENT.</div>
+        <div class="success"><b>Рішення:</b> ALTER TABLE: прибрати my_row_id, зробити потрібні ID поля PRIMARY KEY AUTO_INCREMENT.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="task-title">Apache error.log, який допоміг знайти проблему</div>
+      <pre><code>sudo tail -n 80 /var/log/apache2/error.log
+
+PHP Fatal error: Uncaught mysqli_sql_exception:
+Field 'id' doesn't have a default value
+in /var/www/html/file/hospitalReg.php on line 16
+
+PHP Fatal error: Uncaught mysqli_sql_exception:
+Field 'id' doesn't have a default value
+in /var/www/html/file/receiverReg.php on line 17</code></pre>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title"><span class="num">6</span> SQL fix / фінальні зміни в базі</h2>
+    <div class="card">
+      <div class="task-title">Виправлення primary key / auto_increment</div>
+      <pre><code>ALTER TABLE hospitals
+DROP PRIMARY KEY,
+DROP COLUMN my_row_id,
+MODIFY id INT NOT NULL AUTO_INCREMENT,
+ADD PRIMARY KEY (id);
+
+ALTER TABLE receivers
+DROP PRIMARY KEY,
+DROP COLUMN my_row_id,
+MODIFY id INT NOT NULL AUTO_INCREMENT,
+ADD PRIMARY KEY (id);
+
+ALTER TABLE bloodinfo
+DROP PRIMARY KEY,
+DROP COLUMN my_row_id,
+MODIFY bid INT NOT NULL AUTO_INCREMENT,
+ADD PRIMARY KEY (bid);
+
+ALTER TABLE bloodrequest
+DROP PRIMARY KEY,
+DROP COLUMN my_row_id,
+MODIFY reqid INT NOT NULL AUTO_INCREMENT,
+ADD PRIMARY KEY (reqid);
+
+ALTER TABLE blooddonate
+DROP PRIMARY KEY,
+DROP COLUMN my_row_id,
+MODIFY donoid INT NOT NULL AUTO_INCREMENT,
+ADD PRIMARY KEY (donoid);
+
+ALTER TABLE blooddinfo
+DROP PRIMARY KEY,
+DROP COLUMN my_row_id,
+MODIFY bdid INT NOT NULL AUTO_INCREMENT,
+ADD PRIMARY KEY (bdid);</code></pre>
+      <div class="success"><b>Результат:</b> реєстрація користувача почала працювати, вкладки сайту відкривалися без HTTP 500.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title"><span class="num">7</span> Результат перевірки / browser demo</h2>
+    <div class="grid2">
+      <div class="card">
+        <div class="task-title">Що перевірено у браузері</div>
+        <div class="checklist">
+          <div class="check">Головна сторінка відкривається за public IP.</div>
+          <div class="check">Register page відкривається.</div>
+          <div class="check">User registration працює.</div>
+          <div class="check">User dashboard відкривається.</div>
+          <div class="check">Blood Info відкривається.</div>
+          <div class="check">Blood Available відкривається.</div>
+          <div class="check">Status of Request відкривається.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="task-title">Доказ роботи з базою</div>
+        <pre><code>hospitals_count = 5
+receivers_count = 6
+bloodinfo_count = 17
+blooddinfo_count = 14</code></pre>
+        <div class="success">Записи в таблицях підтвердили, що застосунок реально працює з Azure MySQL.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="task-title">Посилання для browser demo</div>
+      <pre><code>http://20.126.6.252/main.php</code></pre>
+      <div class="warn">У submission потрібно вставити посилання на записане відео та repository/branch.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title"><span class="num">8</span> GitHub / portfolio branch</h2>
+    <div class="card">
+      <p>Для портфоліо було створено SSH key на Azure VM, налаштовано доступ до GitHub, склониновано fork користувача, створено окрему branch <b>azure-deployment</b> і запушено deployment-документацію без секретів.</p>
+      <div class="grid2">
+        <div>
+          <div class="task-title">Створення SSH key</div>
+          <pre><code>ssh-keygen -t ed25519 -C "azure-vm-github" -f ~/.ssh/id_ed25519_github
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519_github
+cat ~/.ssh/id_ed25519_github.pub
+
+ssh -T git@github.com</code></pre>
+        </div>
+        <div>
+          <div class="task-title">Git workflow</div>
+          <pre><code>git clone git@github.com:unikol/Blood-Bank-Management-System.git
+cd Blood-Bank-Management-System
+git switch -c azure-deployment
+
+git add docs/azure-deployment-notes.md
+git add file/connection.azure.example.php
+git add sql/fixes/
+
+git commit -m "Add Azure deployment notes and MySQL fix"
+git push -u origin azure-deployment</code></pre>
+        </div>
+      </div>
+      <div class="success"><b>Фінальний Git стан:</b> branch azure-deployment запушена, working tree clean.</div>
+      <div class="note"><b>GitHub Pages-ready:</b> цю HTML-сторінку можна покласти як <code>docs/index.html</code> у repository і опублікувати через GitHub Pages з branch <b>azure-deployment</b> або <b>main</b>, folder <b>/docs</b>.</div>
+      <div class="checklist">
+        <div class="check">docs/azure-deployment-notes.md</div>
+        <div class="check">file/connection.azure.example.php з CHANGE_ME замість пароля</div>
+        <div class="check">sql/fixes/azure-mysql-auto-increment-fix.sql</div>
+      </div>
+    </div>
+  </section>
+
+
+  <section>
+    <h2 class="section-title"><span class="num">9</span> Що я навчився / практичний висновок</h2>
+    <div class="grid3">
+      <div class="progress-card">
+        <div class="icon">☁️</div>
+        <div>
+          <div class="mini-title">Azure IaaS</div>
+          <div class="subtle">Створення VM, public IP, NSG, inbound port rules.</div>
+        </div>
+      </div>
+      <div class="progress-card">
+        <div class="icon">🗄️</div>
+        <div>
+          <div class="mini-title">Managed MySQL</div>
+          <div class="subtle">Azure Database for MySQL Flexible Server, firewall rules, SSL connection.</div>
+        </div>
+      </div>
+      <div class="progress-card">
+        <div class="icon">🛠️</div>
+        <div>
+          <div class="mini-title">Troubleshooting</div>
+          <div class="subtle">Apache logs, MySQL timeout, PHP 500, AUTO_INCREMENT schema fix.</div>
+        </div>
+      </div>
+      <div class="progress-card">
+        <div class="icon">🌐</div>
+        <div>
+          <div class="mini-title">LAMP deployment</div>
+          <div class="subtle">Apache/PHP app у /var/www/html і перевірка через браузер.</div>
+        </div>
+      </div>
+      <div class="progress-card">
+        <div class="icon">🔐</div>
+        <div>
+          <div class="mini-title">Secrets hygiene</div>
+          <div class="subtle">Не пушити реальний connection.php, створити safe example file.</div>
+        </div>
+      </div>
+      <div class="progress-card">
+        <div class="icon">🌿</div>
+        <div>
+          <div class="mini-title">Git workflow</div>
+          <div class="subtle">SSH key, branch, commit, push, deployment documentation.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="task-title">Фінальний висновок</div>
+      <div class="success">Практичне завдання виконано: застосунок працює в Azure, база знаходиться в окремому dedicated Azure resource, сайт відкривається в браузері, реєстрація працює, SQL schema issue виправлено, а GitHub branch з deployment notes запушена.</div>
+    </div>
+  </section>
+
+
+  <div class="footer">Azure Blood-Bank Deployment · DevOps / Cloud / Git / Troubleshooting · Portfolio Page</div>
+</div>
+</body>
+</html>
